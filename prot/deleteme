@@ -1,0 +1,1 @@
+This file is included in case anybody is still using an unzipper which doesn't create directories unless there is something in them. 

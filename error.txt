@@ -1,0 +1,1 @@
+g++ -s -O3 -Wall prot.o baddies.o main.o colision.o back.o graphics.o sound.o joy.o main_fn.o -o prot/prot -lstdc++ `allegro-config --libs`

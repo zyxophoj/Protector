@@ -1,0 +1,23 @@
+
+			PROTECTOR CHANGE LOG
+
+1.1  First release.   Tidied up code, started this change log.
+
+1.2  10/02/02  Upgraded to allegro version 4, and a 21st century version of gcc.  Allegro v4 means we get various ports for free, but only DOS and Linux have been tested.
+
+1.3 18/06/03:  This is primarily a bug fix release, released in a bit of a hurry due to the severity of some of the bugs reported!
+Removed the BSD blurb from prot.txt (The "Obnoxious BSD Advertising Clause" has been officially voided).
+Added some planets and things in the background.
+Fixed (well, klugded around) the bug which made the game crash when quitting.
+Tried to separate the platform-specific and platform-agnostic code.
+Fixed the "Cheshire cat" bug - sometimes the bottoms of pods were not completely drawn over when they were picked up.
+Fixed a bug in the high score table which caused a score deserving only tenth place to appear ninth.  (Thanks to Hugh Robinson for finding this bug)
+Sorted out some of the keypress handling code.
+Fixed some questionable coding style, which recent versions of DJGPP don't like.
+Replaced all DOS LFs with unix CR/LFs - some versions of GCC didn't like dos-style returns and generated cryptic error messages. (Thanks to "Cone" for spotting this one) 
+
+1.4 20/9/06:
+Fixed a bug with sparks appearing in wierd places
+Cleaned up code to deal with things that the latest versino of DJGPP didn't like
+
+    

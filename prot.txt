@@ -1,0 +1,93 @@
+
+				PROTECTOR INSTRUCTIONS
+
+Protector is a DOS game - it should run on DOS, or Windows 95, 98 or ME.  NT/2000 users will need a boot disk.
+
+
+How to install Protector:  
+
+Create a directory somewhere and unzip the zip file
+into it.  Run prot.exe to start.  
+
+The zip file should contain:
+
+prot.exe - the game file
+prot.cfg - configuration file
+cwsdpmi.exe - protected memory server
+prot.txt - this file
+gpl.txt - the license
+changes.txt - the change log 
+
+
+The game:
+
+It's a defender clone.  Pick up the lifepods (red smiley things at
+the bottom of the screen) and take them through the portal (blue
+wobbly thing).  Various baddies will try to stop you.  Shoot them.
+
+Controls:  Use the arrow keys and space bar for the main menu.  Default 
+game controls are:
+
+    Player 1:                          Player 2:
+
+Caps Lock  - Fire                 Enter       - Fire
+A          - Up                   Up arrow    - Up
+Z          - Down                 Down arrow  - Down
+X          - Left                 Left arrow  - Left
+C          - Right                Right arrow - Right
+B          - Smart bomb           ]           - Smart Bomb
+S          - Shield on/off        [           - Shield on/off
+Escape     - Suicide              Escape      - Suicide
+
+but you can redefine them.
+
+When the game says "Press the key you want to use to <do something>", you can
+also press a joystick button or move the stick in some direction.
+Calibrate the joystick first!   
+
+Sound:
+
+Sound configuration is always a pain.  Unless you are very lucky, 
+Protector will need some help in detecting your sound configuration.
+Open the prot.cfg file with a text editor and fill in some details.
+The important ones are sound card type, port adress, IRQ and DMA.
+
+DJGPP
+
+Protector was compiled with DJGPP- a DOS port of the GNU C/C++ compiler, by DJ Delorie and a lot of other people.  DJGPP is freely available- it can be downloaded from various websites:
+
+http://www.delorie.com/djgpp/
+or:
+http://www.simtel.net/simtel.net/
+(choose a mirror site from here)
+
+Protector uses the allegro game library for DJGPP.  This is a very useful collection of graphics and sound routines and other stuff, by Shawn Hargreaves and some other people.  Allegro can probably be downloaded from any site which offers DJGPP.
+
+Cwsdmpi is by Charles Sandmann.
+
+
+
+License:
+
+Protector is free software, released under the GPL version 2, or any later version (if you prefer a later version).  Additionally, if you give copies of the DOS version to other people, you need to tell them where they can get DJGPP from.
+
+The licenses are complicated but the important points are these:
+
+You are allowed to play the game.
+You are allowed to give copies of it to other people.  (The simplest way is to include all the files listed above)
+If you want the source code you should be able to get it.
+
+If my website is working, you should be able to get the source code from here:
+http://www.void.fslife.co.uk/games/prot/prot.html
+
+
+Disclaimer:
+
+If anything goes wrong, it's not my fault.
+
+
+Credits:
+
+Programming etc.            - Mark Boyd
+Playtesting                 - Robert Stewart
+Some concepts 'inspired' by - Microsith at www.microsith.com (alas, this site is slowly disintegrating)
