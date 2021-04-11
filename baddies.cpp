@@ -715,11 +715,10 @@ if(eyes[1])delete eyes[1];
 
 void vip::init(void)
 {
-std::cout<<"vip1\n";
 int a,b;
 double dubx,duby,theta;
 make_bitmap(vippic,140,40);
-clear(vippic);std::cout<<"vip2\n";
+clear(vippic);
 
 for(b=0;b<2;b++)
   {
@@ -754,24 +753,18 @@ for(b=0;b<2;b++)
     clipart(a,9,b);
   }
 
-std::cout<<"vip3\n";
-
 messy=16;
 a=90;
 while(vippic.getpixel(a,19)==0)a--;
 messx1=a;
-make_bitmap(edgeL,4,8); std::cout<<"bb\n";
-blit(vippic,edgeL,messx1,messy,0,0,4,8);std::cout<<"ab\n";
-
-std::cout<<"vip4\n";
+make_bitmap(edgeL,4,8);
+blit(vippic,edgeL,messx1,messy,0,0,4,8);
 
 b=90;
 while(vippic.getpixel(b,19)==0)b++;
 messx2=b;
-make_bitmap(edgeR,4,8);std::cout<<"bb\n";
-blit(vippic,edgeR,messx2-3,messy,0,0,4,8);std::cout<<"ab\n";
-
-std::cout<<"vip5\n";
+make_bitmap(edgeR,4,8);
+blit(vippic,edgeR,messx2-3,messy,0,0,4,8);
 
 }
 

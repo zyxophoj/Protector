@@ -57,7 +57,7 @@ void drect::draw(const graphics::bitmap &b, graphics::screen_ &scr, int xoffset,
 
 void drect::cleardraw(graphics::bitmap &b)
 {
-  b.rectfill(x,y,x+w-1,y+h-1,0);
+  b.rectfill(x,y,x+w,y+h,0);
 }
 
 
@@ -162,9 +162,7 @@ void display::drawall(graphics::screen_ &scr)
 //Only blit the bits which have changed - the rest is just black,
 //so there is not a lot of point in drawing it.
 
-blit(vscreen, scr, 0,0,xoff, yoff, vscreen.width(), vscreen.height());
-vscreen.clear(0);
-return;
+
 
 
 //blit chunks of vscreen to real screen
@@ -172,6 +170,7 @@ for(std::list<drect *>::iterator i=drects.begin(); i!=drects.end(); i++)
   {
   (*i)->draw(vscreen,scr,xoff,yoff);
   }
+
 //black out chunks of vscreen
 while(drects.size())
   {
@@ -187,6 +186,7 @@ for(std::list<display *>::iterator i=displays.begin(); i!=displays.end(); i++)
     blit((*i)->ground,scr,((*i)->centre->getx())%512,g%2,(*i)->xoff,
                                BOTTOM+g+(*i)->yoff,(*i)->w,1);
   }
+
 }
 
 void display::drawsprites(graphics::screen_ &scr)
@@ -258,7 +258,7 @@ for(std::list<display *>::iterator i = display::displays.begin(); i!=display::di
   if(left+width>=0&&left<pdisp->w)
     {
     pdisp->add_drect(new drect(left,m_y-std::max(m_dy,0),width,h+abs(m_dy)));
-    pdisp->vscreen.rectfill(tx,m_y,tx+w-1,m_y+h-1,0);
+    pdisp->vscreen.rectfill(tx,m_y,tx+w,m_y+h,0);
     }
   }
 }
@@ -623,7 +623,6 @@ if(passenger)
 
 void defender::init()
 {
-std::cout<<"defin start\n";
 static bool is_already_initialised(false);
 if (is_already_initialised) return;
 is_already_initialised = true;
@@ -672,7 +671,6 @@ for(int a=4;a<8;a++)
   blit(defpics[a-4],defpics[a],0,0,0,0,20,10);
   for(int b=0;b<20;b++)
     {
-    std::cout<<"a is "<<a<<"\n";
     int c=0;
     while(defpics[a].getpixel(b,c)==0)c++;
     defpics[a].putpixel(b,c,15);
@@ -886,7 +884,6 @@ shots.erase(this);
 
 void shot::init()
 {
-  std::cout<<"shot init\n";
   make_bitmap(spic,20,1);
   spic.clear(15);
 }
@@ -1652,7 +1649,9 @@ void timerstuff::tick()
 if(bombstate)
   {
   bombstate--;
-  graphics::setcol(0,bombstate,bombstate,bombstate);
+  
+  //TODO: find a way top make this work without breaking drects
+  //graphics::setcol(0,bombstate,bombstate,bombstate);
   }
 if(messtimer)
   {

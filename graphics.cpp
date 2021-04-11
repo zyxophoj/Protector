@@ -165,8 +165,6 @@ screen_::screen_()
   // to the target.
 
   g_font=bitmap(font.width(), font.height());
-  std::cout<<font.width()<<"\n";
-  std::cout<<font.height()<<"\n";
   g_font.rect(0,0,font.width(), font.height(), 13); //Fill with "magic pink"
   blit(font, g_font, 0,0,0,0, font.width(), font.height());
   g_font.set_transparency(15);
