@@ -49,20 +49,20 @@ a look even if you did get a copy of the GPL.
 unsigned char g_pallette[256][3]={
     // RRR, GGG, BBB
     {  0,   0,   0}, //black
-    {128,   0,   0},
+    {  0,   0, 128}, //1: blue
     {  0, 128,   0}, 
-    {128, 128,   0}, 
-    {  0,   0, 128}, 
-    {128,   0, 128}, 
     {  0, 128, 128}, 
+    {128,   0,   0}, //4: red 
+    {128,   0, 128}, 
+    {128, 128,   0}, 
     { 96,  96,  96}, //silver
     {128, 128, 128}, //grey
-    {255,   0,   0}, //red
-    {  0, 255,   0}, //lime
-    {255, 255,   0}, //yellow
-    {  0,   0, 255}, //blue
-    {255,   0, 255}, //fuchsia
-    {  0, 255, 255}, //aqua
+    {  0,   0, 255}, 
+    {  0, 255,   0}, 
+    {  0, 255, 255}, 
+    {255,   0,  0}, 
+    {255,   0, 255}, 
+    {255, 255,   0},
     {255, 255, 255}, //white
 };
 
@@ -117,12 +117,11 @@ bool graphics::is_graphics_mode()
 void graphics::setcol(unsigned char n,unsigned char r,
 	              unsigned char g,unsigned char b)
 {
-  //TODO: why do I have to swap r and b?  Is there some endianness issue here?
-  g_pallette[n][0]=b;
+  g_pallette[n][0]=r;
   g_pallette[n][1]=g;
-  g_pallette[n][2]=r;
+  g_pallette[n][2]=b;
 
-  g_b_pallette[n]=SDL_MapRGBA(SDL_GetWindowSurface(g_window)->format, r,g,b,128);
+  g_b_pallette[n]=SDL_MapRGB(SDL_GetWindowSurface(g_window)->format, r,g,b);
   if (g_reverse_pallette_lookup.find(g_b_pallette[n])==g_reverse_pallette_lookup.end())
     g_reverse_pallette_lookup[g_b_pallette[n]]=n;
 }
@@ -206,18 +205,17 @@ boost::shared_ptr<graphics::ssur> i_make_surface(int w, int h){
     /* SDL interprets each pixel as a 32-bit number, so our masks must depend
        on the endianness (byte order) of the machine */
     Uint32 rmask, gmask, bmask, amask;
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+if (SDL_BYTEORDER == SDL_BIG_ENDIAN){
     rmask = 0xff000000;
     gmask = 0x00ff0000;
     bmask = 0x0000ff00;
     amask = 0x000000ff;
-#else
+}else{
     rmask = 0x000000ff;
     gmask = 0x0000ff00;
     bmask = 0x00ff0000;
     amask = 0xff000000;
-#endif
-
+}
 SDL_Surface *sur = SDL_CreateRGBSurface(0, w,h, 32, rmask, gmask, bmask, amask);
 SDL_SetSurfaceBlendMode(sur, SDL_BLENDMODE_NONE);
                            
@@ -338,14 +336,16 @@ int bitmap::getpixel(int x, int y) const
   if (x>=width()) throw x;
   if (y>=height()) throw y;
 
-  auto i = g_reverse_pallette_lookup.find(sdl_getpixel((*m_surp)(), x, y));
-  if (i==g_reverse_pallette_lookup.end()){
-    std::cout<<"Found nothing! "<<x<<", "<<y<<"->"<<sdl_getpixel((*m_surp)(), x, y)<<"\n";
-    return 0; //This is bad
+
+  Uint8 r, g, b;
+  SDL_GetRGB(sdl_getpixel((*m_surp)(), x, y), (*m_surp)()->format,  &r, &g, &b);
+  for (int i=0; i<156; ++i){
+    if (g_pallette[i][0]==r && g_pallette[i][1]==g && g_pallette[i][2]==b) return i;
+
   }
 
-  //std::cout<<"Found "<<i->first<<", "<<i->second<<"\n";
-  return i->second;
+    std::cout<<"Found nothing!\n";
+    return 0; //This is bad
 }
 
 
@@ -353,7 +353,7 @@ int bitmap::getpixel(int x, int y) const
 void bitmap::putpixel(int x, int y, int col)
 {
   //std::cout<<"putting "<<col<<"\n";
-  return sdl_putpixel((*m_surp)(), x, y, g_b_pallette[col]);
+  return sdl_putpixel((*m_surp)(), x, y, SDL_MapRGB((*m_surp)()->format, g_pallette[col][0], g_pallette[col][1], g_pallette[col][2]));
 }
 
 void bitmap::drawtext(const char *str, int left, int top, int colour, int bg)
