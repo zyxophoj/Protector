@@ -44,7 +44,8 @@ public:
   bool get_die() const;
 
   void redefine();
-  void info(int x, int y);
+  void info(graphics::screen_, int x, int y);
+  void listen();
 
 //todo: fix this!
   con *m_pcon;
@@ -66,6 +67,5 @@ private:
 
 //control functions
 int calibrate_stick();
-int get_craptop_mode();
 void plot_joystick_state(const graphics::bitmap &, int);
-int keymenu(int,int,int,const char **,int);
+int keymenu(graphics::screen_&, int x, int y, int start, const char ** textlist, int length);

@@ -1,35 +1,41 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <allegro.h>
 #include "joy.h"
+#include "sdlinclude.h"
+#include "graphics.h"
 
 //controls
 struct con
 {
 char *constr[9];
 bool isk[9];
+bool pressed[9];
 int  *b[9];
-volatile char *k[9];
+volatile SDL_Keycode k[9];
+
+
 public:
-int stick_ud;
-JOYSTICK_AXIS_INFO *stick_udaxis;
-int stick_lr;
-JOYSTICK_AXIS_INFO *stick_lraxis;
+//int stick_ud;
+//JOYSTICK_AXIS_INFO *stick_udaxis;
+//int stick_lr;
+//JOYSTICK_AXIS_INFO *stick_lraxis;
+
 void redefine();
 bool get(int);
-void info(int,int);
+void info(graphics::screen_ &, int,int);
+void listen();
 };
 
 
 void joystick::load_data()
 {
-if (load_joystick_data(0))remove_joystick();
+//if (load_joystick_data(0))remove_joystick();
 }
 
 void joystick::poll()
 {
-  ::poll_joystick();
+//  ::poll_joystick();
 }
 
 int calibrate_stick(void)
@@ -174,39 +180,49 @@ void plot_joystick_state(graphics::bitmap &bmp, int i)
 }
 #endif
 
+#include<list>
 
+
+SDL_Keycode wait_for_key(const std::list<SDL_Keycode> &keys){
+  SDL_Event event;   
+  while(true) while(SDL_PollEvent(&event)) if(event.type==SDL_KEYDOWN) for(auto i=keys.begin(); i!=keys.end(); ++i) if(*i==event.key.keysym.sym) return *i;
+}
 
 //Generate menu, return index of selected item.
-int keymenu(int x,int y,int start,const char **textlist,int length)
+int keymenu(graphics::screen_ &scr, int x,int y,int start,const char **textlist,int length)
 {
+SDL_Keycode keys[]={SDLK_DOWN, SDLK_UP, SDLK_RETURN, SDLK_ESCAPE};
+
 int h(start);
-while(key[KEY_SPACE]||key[KEY_ENTER]);
-for(int a=0;a<length;a++)textout_ex(screen,font,(char *)textlist[a],x,y+8*a,15,-1);
-while(!key[KEY_SPACE]&&!key[KEY_ENTER])
+for(int a=0;a<length;a++)scr.drawtext(textlist[a],x,y+8*a,15,-1);
+while(true) 
   {
-  textout_ex(screen,font,(char *)textlist[h],x,y+8*h,2,-1);
-  readkey();
-  if(key[KEY_UP]&&h)
-    {
-    textout_ex(screen,font,(char *)textlist[h],x,y+8*h,15,-1);
-    h--;
-    }
-  if(key[KEY_DOWN]&&h<length-1)
-    {
-    textout_ex(screen,font,(char *)textlist[h],x,y+8*h,15,-1);
-    h++;
-    }
-  }
-while(key[KEY_SPACE]||key[KEY_ENTER]);
-return h;
+  scr.drawtext(textlist[h],x,y+8*h,2,-1);
+  scr.kick();
+
+  switch(wait_for_key(std::list<SDL_Keycode>(keys, keys+sizeof(keys)/sizeof(*keys)))){
+    case SDLK_UP:    
+      scr.drawtext(textlist[h],x,y+8*h,15,-1);
+      h--;
+      break;
+
+    case SDLK_DOWN:
+      scr.drawtext(textlist[h],x,y+8*h,15,-1);
+      h++;
+      break;
+
+    case SDLK_RETURN: case SDLK_ESCAPE:
+      return h;
+  }}
 }
 
 
 void keys::clear_buffer()
 {
-  ::clear_keybuf();
+  //::clear_keybuf();
 }
 
+/*
 int keys::readkey()
 {
   return ::readkey();
@@ -225,13 +241,15 @@ for(a=count=0;a<128;a++)if(key[a])count++;
 return count;
 }
 
+
 void keys::set_key_led_flag(int i)
 {
 key_led_flag = i;
 }
-
+*/
 
 //timer interrupt
+/*
 volatile int counter(0);
 void biginc(void){counter++;}
 END_OF_FUNCTION(biginc);
@@ -259,12 +277,13 @@ void timer::set_counter(int n)
   counter = n;
 }
 
-
+*/
 
 
 
 void con::redefine()
 {
+/*
 char *desc[9]={"fire","go up","go down","go left","go right","detonate a bomb",
 	       "activate the shield","commit suicide","pause"};
 
@@ -406,25 +425,41 @@ for(int a=0;a<9;a++)
   while(count);
   }
 rest(1000);
+*/
 }
 
 bool con::get(int a)
 {
-return ( isk[a]?*(k[a]):*(b[a])	);
+  return pressed[a];
 }
 
-void con::info(int x,int y)
+void con::info(graphics::screen_ &scr, int x,int y)
 {
-char *function[9]={"Fire:","Up:","Down:","Left:","Right:","Smart bomb:",
+const char *function[9]={"Fire:","Up:","Down:","Left:","Right:","Smart bomb:",
 	       "Shield:","Die:","Pause:"};
 for(int	a=0;a<9;a++)
   {
-  textout_ex(screen,font,function[a],x,y+10*a,15,-1);
-  textout_ex(screen,font,constr[a],x+100,y+10*a,4,-1);
+  scr.drawtext(function[a],x,y+10*a,15,-1);
+  scr.drawtext(constr[a],x+100,y+10*a,4,-1);
   }
 }
 
-
+void con::listen(){
+  //To answer the question "is this key pressed?" in SDL's event-driven model, we have to
+  //look at all events (in principle, since the beginning of time) and see if the last one was key down or key up.
+  SDL_Event event;   
+                                 
+    while(SDL_PollEvent(&event)){
+      if(event.type==SDL_KEYDOWN or event.type==SDL_KEYUP) {
+        for(int i=0;i<9; ++i){
+          if(k[i]==event.key.keysym.sym){
+            pressed[i]=(event.type==SDL_KEYDOWN);
+          }
+        }
+      }
+    }
+  
+}
 
 command &controls::get(int player)
 {
@@ -437,8 +472,8 @@ command &controls::get(int player)
 
 void controls::standard()
 {
-char *names1[9]={"Caps Lock","A","Z","X","C","B","S","Escape","P"};
-char *names2[9]={"Enter","Up","Down","Left","Right","[","]","Escape","P"};
+const char *names1[9]={"Caps Lock","A","Z","X","C","B","S","Escape","P"};
+const char *names2[9]={"Enter","Up","Down","Left","Right","[","]","Escape","P"};
 
 con *con0 = controls::get(0).m_pcon;
 con *con1 = controls::get(1).m_pcon;
@@ -454,31 +489,31 @@ for(int a=0;a<9;a++)
   strcpy(con1->constr[a],names2[a]);
 
   }
-con0->k[0]=key+KEY_CAPSLOCK;
-con0->k[1]=key+KEY_A;
-con0->k[2]=key+KEY_Z;
-con0->k[3]=key+KEY_X;
-con0->k[4]=key+KEY_C;
-con0->k[5]=key+KEY_B;
-con0->k[6]=key+KEY_S;
-con0->k[7]=key+KEY_ESC;
-con0->k[8]=key+KEY_P;
+con0->k[0]=SDLK_CAPSLOCK;
+con0->k[1]=SDLK_a;
+con0->k[2]=SDLK_z;
+con0->k[3]=SDLK_x;
+con0->k[4]=SDLK_c;
+con0->k[5]=SDLK_b;
+con0->k[6]=SDLK_s;
+con0->k[7]=SDLK_ESCAPE;
+con0->k[8]=SDLK_p;
 
-con1->k[0]=key+KEY_ENTER;
-con1->k[1]=key+KEY_UP;
-con1->k[2]=key+KEY_DOWN;
-con1->k[3]=key+KEY_LEFT;
-con1->k[4]=key+KEY_RIGHT;
-con1->k[5]=key+KEY_OPENBRACE;
-con1->k[6]=key+KEY_CLOSEBRACE;
-con1->k[7]=key+KEY_ESC;
-con1->k[8]=key+KEY_P;
+con1->k[0]=SDLK_RETURN;
+con1->k[1]=SDLK_UP;
+con1->k[2]=SDLK_DOWN;
+con1->k[3]=SDLK_LEFT;
+con1->k[4]=SDLK_RIGHT;
+con1->k[5]=SDLK_LEFTBRACKET;
+con1->k[6]=SDLK_RIGHTBRACKET;
+con1->k[7]=SDLK_ESCAPE;
+con1->k[8]=SDLK_p;
 
-con0->stick_ud=0;
-con0->stick_lr=0;
+//con0->stick_ud=0;
+//con0->stick_lr=0;
 
-con1->stick_ud=0;
-con1->stick_lr=0;  
+//con1->stick_ud=0;
+//con1->stick_lr=0;  
 }
 
 void controls::cleanup(void)
@@ -495,26 +530,26 @@ command::~command()
    
 int command::get_ud() const
 {
-  if (m_pcon->stick_ud)
-  {
-    return m_pcon->stick_udaxis->pos * m_pcon->stick_ud;
-  }
-  else
-  {
+  //if (m_pcon->stick_ud)
+  //{
+  //  return m_pcon->stick_udaxis->pos * m_pcon->stick_ud;
+  //}
+  //else
+  //{
     return 128*(m_pcon->get(2)-m_pcon->get(1));
-  }
+  //}
 }
 
 int command::get_lr() const
 {
-  if (m_pcon->stick_lr)
-  {
-    return m_pcon->stick_lraxis->pos * m_pcon->stick_lr;
-  }
-  else
-  {
+  //if (m_pcon->stick_lr)
+  //{
+  //  return m_pcon->stick_lraxis->pos * m_pcon->stick_lr;
+  //}
+  //else
+  //{
     return 128*(m_pcon->get(4)-m_pcon->get(3));
-  }
+  //}
 }
 
 bool command::get_shoot() const  {return m_pcon->get(0);}
@@ -526,4 +561,7 @@ bool command::get_pause() const  {return m_pcon->get(8);}
 
 //These probably shouldn't be members, and shouldnt be here.
 void command::redefine() {m_pcon->redefine();}
-void command::info(int x, int y) {m_pcon->info(x,y);}
+//void command::info(int x, int y) {m_pcon->info(x,y);}
+
+void command::listen(){m_pcon->listen();}
+

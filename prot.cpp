@@ -27,6 +27,7 @@ a look even if you did get a copy of the GPL.
 #include <ctype.h>
 #include <algorithm>
 #include <functional>
+#include <iostream>
 
 #include "stuff.h"
 #include "dlring.h"
@@ -62,10 +63,10 @@ void drect::cleardraw(graphics::bitmap &b)
 
 std::list<display *>display::displays;
 
-display::display(int win,int topin,int xin,int defnum,radar *rin)
+display::display(int win, int hin, int topin,int xin,int defnum,radar *rin)
 {
   w=win;
-  h=std::min(BOTTOM,graphics::screen_().height()-51);
+  h=std::min(BOTTOM,hin-51);
   yoff=topin;
   make_bitmap(vscreen,w,h);
   clear(vscreen);
@@ -86,7 +87,7 @@ display::display(int win,int topin,int xin,int defnum,radar *rin)
     ground.putpixel(a, 1, ground.getpixel(a-512, 1));
   }
   for(int a=0;a<200;a++)(void)(new star(this));
-  for(int a=0;a<5;a++)  (void)(new domed_city(this));
+  //for(int a=0;a<5;a++)  (void)(new domed_city(this));
   for(int a=0;a<3;a++) (void)(new back_planet(this)); 
   centre=new defender(RANDX,200,defnum);
   halfw=(win-DEFWIDTH)/2;
@@ -95,9 +96,11 @@ display::display(int win,int topin,int xin,int defnum,radar *rin)
 
 display::~display()
 {
+  //TODO: this drawing stuff needs to happen somewhere, but NOT IN THE DESTRUCTOR FFS
+
   //Draw current frame (it's this frame that just killed the player)
-  graphics::screen_ scr;
-  drawall(scr);
+  //graphics::screen_ scr;
+  //drawall(scr);
 
   for_each(drects.begin(), drects.end(), kill<drect>());
   drects.empty();
@@ -117,8 +120,10 @@ display::~display()
     centre=0;
   }
   displays.remove(this);
-  scr.rectfill(xoff+halfw-53,195,xoff+halfw+51,212,8);
-  scr.drawtext("YOU'RE DEAD.",xoff+halfw-48,200,15);
+
+
+  //scr.rectfill(xoff+halfw-53,195,xoff+halfw+51,212,8);
+  //scr.drawtext("YOU'RE DEAD.",xoff+halfw-48,200,15);
 }
 
 int display::gethw(void)
@@ -157,6 +162,11 @@ void display::drawall(graphics::screen_ &scr)
 //Only blit the bits which have changed - the rest is just black,
 //so there is not a lot of point in drawing it.
 
+blit(vscreen, scr, 0,0,xoff, yoff, vscreen.width(), vscreen.height());
+vscreen.clear(0);
+return;
+
+
 //blit chunks of vscreen to real screen
 for(std::list<drect *>::iterator i=drects.begin(); i!=drects.end(); i++)
   {
@@ -185,13 +195,13 @@ void display::drawsprites(graphics::screen_ &scr)
     (*i)->drawall(scr);
 }
 
-void display::allmessage(char *tm)
+void display::allmessage(const char *tm)
 {
 for(std::list<display *>::iterator i=displays.begin(); i!=displays.end(); ++i)
   (*i)->message(tm);
 }
 
-void display::message(char *tm)
+void display::message(const char *tm)
 {
 int l=strlen(tm);
 int left=halfw+10-4*l;
@@ -389,7 +399,7 @@ for(int a=0;a<256;a++)
   }
 }
 
-void letter::message(char *the_message,display *dp)
+void letter::message(const char *the_message,display *dp)
 {
 timerstuff::new_message();
 if(dp)
@@ -536,6 +546,8 @@ if(invtime&&invtime/5%2)pic=&defpics[8];
 
 void defender::update()
 {
+// TODO: call all this from something that legitimately has a screen!
+/*
 char strin[15];
 int coords[24]={76,0,620,440,464,464,76,0,620,450,472,472,
 		20,20,560,470,470,470,20,100,400,460,470,470};
@@ -555,6 +567,7 @@ scr.drawtext("E",coords[type+12]+40,coords[type+15],16+elephants/64,16);
 
 sprintf(strin,"%d",score[number]);
 scr.drawtext(strin,coords[type+18],coords[type+21],15, 16);
+*/
 }
 
 defender::defender(int xin,int yin,int typein)
@@ -579,12 +592,14 @@ longshots=0;
 elephants=0;
 type=typein;
 
+/* TODO: when should this be called?
 if(type==0)
   {
   graphics::screen_ scr;
   scr.drawtext("LIVES:",20,440,1);
   scr.drawtext("BOMBS:",20,450,4);
   }
+*/
 disp=0;
 defenders.add(this);
 }
@@ -608,6 +623,7 @@ if(passenger)
 
 void defender::init()
 {
+std::cout<<"defin start\n";
 static bool is_already_initialised(false);
 if (is_already_initialised) return;
 is_already_initialised = true;
@@ -650,11 +666,13 @@ for(int a=0;a<200;a++)
   defpics[2].putpixel(a%20,a/20,defdata[a+200]);
   defpics[3].putpixel(19-a%20,a/20,defdata[a+200]);
   }
+
 for(int a=4;a<8;a++)
   {
   blit(defpics[a-4],defpics[a],0,0,0,0,20,10);
   for(int b=0;b<20;b++)
     {
+    std::cout<<"a is "<<a<<"\n";
     int c=0;
     while(defpics[a].getpixel(b,c)==0)c++;
     defpics[a].putpixel(b,c,15);
@@ -673,6 +691,7 @@ for(int a=4;a<8;a++)
     }
   }
 clear(defpics[8]);
+
 }
 
 defender *defender::getdef(void)
@@ -867,6 +886,7 @@ shots.erase(this);
 
 void shot::init()
 {
+  std::cout<<"shot init\n";
   make_bitmap(spic,20,1);
   spic.clear(15);
 }
@@ -1267,8 +1287,8 @@ void bug::init()
   {
     make_bitmap(landerpic[a],10,10);
     for(b=0;b<100;b++) landerpic[a].putpixel(b%10, b/10, data[b]);
-    c1=static_cast<int>(floor(5.5+5*cos(2.0*M_PI*a/40)));
-    c2=static_cast<int>(floor(5.5+5*cos(2.0*M_PI*(a+10)/40)));
+    c1=static_cast<int>(floor(4.5+5*cos(2.0*M_PI*a/40)));
+    c2=static_cast<int>(floor(4.5+5*cos(2.0*M_PI*(a+10)/40)));
     for(d=1;d<6;d++)
     {
       if(landerpic[a].getpixel(c1,d))
@@ -1500,12 +1520,12 @@ powerups.erase(this);
 
 void powerup::init()
 {
-char *letter[8]={"R","A","L","B","S","X","I","E"};
+const char *letter[8]={"R","A","L","B","S","X","I","E"};
 for(int a=0;a<8;a++)
   {
   make_bitmap(pupics[a],15,15);
   pupics[a].circle(7,7,7,15);
-  pupics[a].drawtext(letter[a],4,4,32);
+  pupics[a].drawtext(letter[a],4,4,15);
   }
 }
 
@@ -1522,9 +1542,11 @@ radars.push_back(this);
 top=t;left=l;width=w;height=h;
 xs=1.0*width/XWIDTH;
 ys=1.0*height/410;
-graphics::screen_ scr;
-scr.hline(left,top-1     ,left+width,8);
-scr.hline(left,top+height,left+width,8);
+
+//TODO: when should this be called?
+//graphics::screen_ scr;
+//scr.hline(left,top-1     ,left+width,8);
+//scr.hline(left,top+height,left+width,8);
 }
 
 radar::~radar()
@@ -1538,9 +1560,11 @@ int sc_left,sc_right;
 d=din;
 sc_left=static_cast<int>((XWIDTH/2-d->w/2)*xs);
 sc_right=static_cast<int>((XWIDTH/2+d->w/2)*xs);
-graphics::screen_ scr;
-scr.hline(left+sc_left,top-1,     left+sc_right,24);
-scr.hline(left+sc_left,top+height,left+sc_right,24);
+
+//TODO: when should this be called?
+//graphics::screen_ scr;
+//scr.hline(left+sc_left,top-1,     left+sc_right,24);
+//scr.hline(left+sc_left,top+height,left+sc_right,24);
 }
 
 void radar::wipe()
@@ -1652,7 +1676,7 @@ messtimer=200;
 }
 
 
-hst::hst(char *arg)
+hst::hst(const char *arg)
 {
 int a,b;
 int scstart[10]={500000,400000,300000,200000,100000,50000,20000,10000,5000,1000};
@@ -1683,11 +1707,11 @@ else
   }
 }
 
-void hst::show(void)
+void hst::show(graphics::screen_ &scr)
 {
 int a;
 char strin[10];
-graphics::screen_ scr;
+
 clear(scr);
 for(a=0;a<10;a++)
   {
@@ -1699,7 +1723,7 @@ scr.drawtext("Top Scores",270,110,15);
 scr.rect(200,130,425,310,15);
 }
 
-void hst::add(char *who,int sin)
+void hst::add(graphics::screen_ &scr, const char *who,int sin)
 {
 int a,b,g,r;
 char strin[11];
@@ -1715,17 +1739,18 @@ if(sin>scores[9])
     a--;
     }
   scores[a]=sin;
-  names[a]="";
-  show();
+  names[a][0]=0;
+  show(scr);
   strcpy(buf,"Enter your name, ");
   strcat(buf,who);
-  graphics::screen_().drawtext(buf,320-4*strlen(buf),400,15);
+  scr.drawtext(buf,320-4*strlen(buf),400,15);
   keys::clear_buffer();
   for(b=11;b>0;b--) strin[b-1]=0;
-  do
+  //TODO : restore name-typing loop
+  /*do
     {
     while(!keys::keypressed())
-    graphics::screen_().drawtext(" ",20,10,15);
+    scr.drawtext(" ",20,10,15);
     g=(r=keys::readkey())&0xff;
     switch(g)
       {
@@ -1752,29 +1777,29 @@ if(sin>scores[9])
 	}
       break;
       }
-    graphics::screen_ scr;
+
     scr.rectfill(220,150+15*a,319,160+15*a,0);
     scr.drawtext(strin,220,150+15*a,15);
-    }while(g!=13);
+    }while(g!=13);*/
   for(int nn=0;nn<8;nn++)sound::play(sound::kaboom,255);
   strin[b++]=0;
   //Apologies to any Ms Returns out there
   if(b==1) {strcpy(strin,"Mr Return");b=7;}
   names[a]=new char[b];
   strcpy(names[a],strin);
-  show();
+  show(scr);
   }
 else
   {
-  show();
+  show(scr);
   sprintf(strin,"%d",sin);
   strcpy(buf,who);
   strcat(buf," scored ");
   strcat(buf,strin);
-  graphics::screen_().drawtext(buf,320-4*strlen(buf),400,15);
+  scr.drawtext(buf,320-4*strlen(buf),400,15);
   }
   keys::clear_buffer();
-  while(!keys::keypressed());
+  //while(!keys::keypressed());
 }
 
 hst::~hst()
@@ -1817,7 +1842,7 @@ for(int a=0;a<32;a++)
 void exploderanim::cycle()
 {
   n = (n+1)%128;
-  graphics::set_colours(128, colours, n);
+  //graphics::set_colours(128, colours, n);
 }
 
 

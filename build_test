@@ -1,0 +1,4 @@
+g++ test/test0.cpp `sdl2-config --libs` -lSDL2_image -o build/test0.out
+g++ test/test1.cpp graphics.cpp cheat.cpp `sdl2-config --libs` -lSDL2_image -o build/test1.out
+g++ test/test2.cpp graphics.cpp cheat.cpp `sdl2-config --libs` -lSDL2_image -o build/test2.out
+g++ test/test3.cpp graphics.cpp cheat.cpp joy.cpp `sdl2-config --libs` -lSDL2_image -o build/test3.out

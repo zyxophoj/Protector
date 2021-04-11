@@ -24,14 +24,29 @@ a look even if you did get a copy of the GPL.
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+//#include "sdlinclude.h"
 
-class bitmap_impl;
+#include <boost/shared_ptr.hpp>
+#include <boost/noncopyable.hpp>
+
+struct SDL_Surface;
 
 namespace graphics
 {
 
+//Stupid surface
+//Adapter for SDL_Surface that knows how to clean it up
+class ssur:public boost::noncopyable
+{
+    public:
+	ssur(SDL_Surface *sur):m_sur(sur){}
+	SDL_Surface * operator()(){return m_sur;}
+	~ssur(); //{if (m_sur){SDL_FreeSurface(m_sur);}}
+        void disarm(){m_sur=0;} //Evil function of evil, do not use this.
+    private:
+        SDL_Surface *m_sur;
+};
 
-//Caveat programmer:  bitmap has the same nasty copy semantics as auto_ptr!
 class bitmap
 {
 friend void blit(const bitmap &, bitmap &, int, int, int, int, int, int);
@@ -39,17 +54,16 @@ friend void masked_blit(const bitmap &, bitmap &, int, int, int, int, int, int);
 
 public:
   bitmap();
+  bitmap(SDL_Surface *);
   bitmap(int w, int h);
-  virtual ~bitmap();
-
-  bitmap(bitmap &other);
-  const bitmap &operator =(bitmap &);
+  virtual ~bitmap(){};
 
   virtual int height() const;
   virtual int width() const;  
   
   int getpixel(int x, int y) const;
  
+  void set_transparency(int);
 
   void putpixel(int x, int y, int col);
   void clear(int col);
@@ -64,32 +78,26 @@ public:
 
 
 protected:
-  bitmap_impl *m_pimpl;
+   boost::shared_ptr<ssur> m_surp;
 
-//The infamous auto_ptr hack
-private:
-  struct bitmap_ref
-  {
-    bitmap_impl *m_bi;
-  bitmap_ref(bitmap_impl *bi):m_bi(bi){}
-  };
-public:
-  operator bitmap_ref(){bitmap_impl *bi=m_pimpl; m_pimpl=0; return bitmap_ref(bi);}
-  bitmap(bitmap_ref br):m_pimpl(br.m_bi){}
 };
 
 class screen_:public bitmap
 {
-public:
+  //This can be copied, but you are just copying a tiny reference to a single underlying resource.
+
+private:
+  // Call graphics::init to construct a screen
   screen_();
+  friend screen_ &graphics::init();
+
+public:
   ~screen_();
 
   virtual int height() const;
   virtual int width() const;  
-private:
-  //Not implemented - copying this just doesn't make sense.
-  screen_(const screen_ &);
-  const screen_ &operator=(const screen_ &);
+
+  void kick(); //Force queued writes to actually happen
 };
 
 
@@ -107,7 +115,7 @@ void setcol(unsigned char n,unsigned char r,
 
 void set_colours(int base, unsigned char (*colours)[3], int n);
 
-void init();
+screen_ &init();
 void exit();
 
 bool is_graphics_mode();

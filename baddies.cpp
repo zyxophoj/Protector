@@ -22,6 +22,9 @@ a look even if you did get a copy of the GPL.
 */
 
 #include <math.h>
+#include <string.h>
+#include <iostream>
+
 #include "prot.h"
 #include "baddies.h"
 #include "missiles.h"
@@ -492,7 +495,7 @@ for(int b=0; b<npoints-1; b++)
     rad[a]= (val[b+1]*(a-point[b]) + val[b]*(point[b+1]-a)) /
                 (point[b+1]-point[b]);
 
-char *dsd = "DOM-S-DOS";
+const char *dsd = "DOM-S-DOS";
 graphics::bitmap dsdpic(strlen(dsd)*8, 16);
 clear(dsdpic);
 dsdpic.drawtext(dsd, 0, 0, 1);
@@ -583,7 +586,7 @@ graphics::bitmap vip::vippic;
 graphics::bitmap vip::edgeL;
 graphics::bitmap vip::edgeR;
 
-char *vip::blurb[]={
+const char *vip::blurb[]={
 
 " DID YOU KNOW..?  RESISTANCE IS FUTILE.  YOU WILL BE ASSIMILATED. ",  //Borg
 " DID YOU KNOW..?  THE PLANET EXPLODER IS ENTIRELY INVINCIBLE IN EVERY RESPECT. ",
@@ -712,10 +715,11 @@ if(eyes[1])delete eyes[1];
 
 void vip::init(void)
 {
+std::cout<<"vip1\n";
 int a,b;
 double dubx,duby,theta;
 make_bitmap(vippic,140,40);
-clear(vippic);
+clear(vippic);std::cout<<"vip2\n";
 
 for(b=0;b<2;b++)
   {
@@ -750,20 +754,24 @@ for(b=0;b<2;b++)
     clipart(a,9,b);
   }
 
-
+std::cout<<"vip3\n";
 
 messy=16;
 a=90;
 while(vippic.getpixel(a,19)==0)a--;
 messx1=a;
-make_bitmap(edgeL,4,8);
-blit(vippic,edgeL,messx1,messy,0,0,4,8);
+make_bitmap(edgeL,4,8); std::cout<<"bb\n";
+blit(vippic,edgeL,messx1,messy,0,0,4,8);std::cout<<"ab\n";
+
+std::cout<<"vip4\n";
 
 b=90;
 while(vippic.getpixel(b,19)==0)b++;
 messx2=b;
-make_bitmap(edgeR,4,8);
-blit(vippic,edgeR,messx2-3,messy,0,0,4,8);
+make_bitmap(edgeR,4,8);std::cout<<"bb\n";
+blit(vippic,edgeR,messx2-3,messy,0,0,4,8);std::cout<<"ab\n";
+
+std::cout<<"vip5\n";
 
 }
 

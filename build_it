@@ -1,0 +1,1 @@
+g++ -Wall main.cpp prot.cpp graphics.cpp sound.cpp baddies.cpp colision.cpp back.cpp joy.cpp cheat.cpp `sdl2-config --libs` -lSDL2_image -o build/protector

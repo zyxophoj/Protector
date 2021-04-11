@@ -29,6 +29,8 @@ a look even if you did get a copy of the GPL.
 #include <algorithm>
 #include <functional>
 
+#include <iostream>
+
 #include "stuff.h"
 #include "prot.h"
 #include "missiles.h"
@@ -37,15 +39,18 @@ a look even if you did get a copy of the GPL.
 #include "graphics.h"
 #include "joy.h"
 #include "main.h"
+#include "cheat.h"
 
-void game(int nplayers, int craptop_mode);
+
+
+void game(graphics::screen_ &, int nplayers, int craptop_mode);
 
 //attract mode functions
-void attract();
-void blocktext(graphics::bitmap &,char *,int,int,int);
+void attract(graphics::screen_ &);
+void blocktext(graphics::bitmap &,const char *,int,int,int);
 graphics:: bitmap planexppic(int);
 void jools(graphics::bitmap &);
-void drawit(int *,int *,int *,int,int,int);
+void drawit(graphics::screen_ &, int *,int *,int *,int,int,int);
 
 
 void screenshot();
@@ -58,13 +63,51 @@ hst thst("prot.hst");
 //a score when they die anyway.  score[1] and [2] are player scores.
 int score[3];
 
-
-//Not really the main function - that's in main_fn.h
-int main_()
+int get_craptop_mode(graphics::screen_ &scr)
 {
-graphics::init();
+//todo: perhaps craptop_mode should modify the pallete to cope with
+//LCD abominations
+clear(scr);
+const char *options[2]={"On","Off"};
+return !keymenu(scr, 150,80,0,options,2);
+}
+
+
+
+
+int main()
+{
+graphics::screen_ screen = graphics::init();
+
+std::cout<<"initted\n";
 
 srand(time(NULL));
+
+graphics::setcol(32,32,63,0);
+graphics::setcol(33,63,32,0);
+graphics::setcol(34,60,31,0);
+graphics::setcol(35,57,30,0);
+graphics::setcol(36,54,29,0);
+graphics::setcol(37,51,28,0);
+
+graphics::setcol(38,16,35,16);
+graphics::setcol(39,16,36,16);
+graphics::setcol(40,16,37,16);
+graphics::setcol(41,16,38,16);
+graphics::setcol(42,16,39,16);
+graphics::setcol(43,16,40,16);
+graphics::setcol(44,16,41,16);
+
+graphics::setcol(45, 3, 8, 3);
+graphics::setcol(46, 6,15, 6);
+graphics::setcol(47, 9,23, 9);
+graphics::setcol(48,12,30,12);
+
+graphics::setcol(49, 0, 0, 0);
+graphics::setcol(50,16, 0, 0);
+graphics::setcol(51,32, 0, 0);
+graphics::setcol(52,47, 0, 0);
+graphics::setcol(53,63, 0, 0);
 
 sound::init();
 letter::init();
@@ -96,33 +139,11 @@ spark::init();
 
 exploderanim::init();
 
-timer::init();
+std::cout<<"classes initted\n";
 
-graphics::setcol(32,32,63,0);
-graphics::setcol(33,63,32,0);
-graphics::setcol(34,60,31,0);
-graphics::setcol(35,57,30,0);
-graphics::setcol(36,54,29,0);
-graphics::setcol(37,51,28,0);
+//timer::init();
 
-graphics::setcol(38,16,35,16);
-graphics::setcol(39,16,36,16);
-graphics::setcol(40,16,37,16);
-graphics::setcol(41,16,38,16);
-graphics::setcol(42,16,39,16);
-graphics::setcol(43,16,40,16);
-graphics::setcol(44,16,41,16);
 
-graphics::setcol(45, 3, 8, 3);
-graphics::setcol(46, 6,15, 6);
-graphics::setcol(47, 9,23, 9);
-graphics::setcol(48,12,30,12);
-
-graphics::setcol(49, 0, 0, 0);
-graphics::setcol(50,16, 0, 0);
-graphics::setcol(51,32, 0, 0);
-graphics::setcol(52,47, 0, 0);
-graphics::setcol(53,63, 0, 0);
 
 controls::standard();
 
@@ -130,18 +151,19 @@ joystick::load_data();
 
 int cont=0; //"might be used uninitialised"
 int craptop_mode=0;
+
+std::cout<<"Starting main loop\n";
+
 do
   {
   keys::clear_buffer();
-  attract();
+  //attract(screen);
   do
     {
-    //main menu
-      {
-      graphics::screen_ scr;
-      clear(scr);
-      scr.drawtext("PROTECTOR",268,236,15);
-    }
+    //main menu  
+    screen.clear(0);
+    screen.drawtext("PROTECTOR",268,236,15);
+    
     const char *options[]={
       "1 player game",
       "2 player game",
@@ -151,14 +173,14 @@ do
       "Edges",
       "Quit"};    
 
-    int m=keymenu(220,300,0,options,7);
+    int m=keymenu(screen, 220,300,0,options,7);
     switch(m)
       {
 
       case 0:
-      game(1,craptop_mode);
+      game(screen, 1,craptop_mode);
       //while(keys::keycount());
-      thst.add("Player 1",score[1]);
+      thst.add(screen, "Player 1",score[1]);
       //while(keys::keycount());
 //      timer::set_counter(0);
 //      while(!keys::keycount())if(timer::get_counter()>2500)break;
@@ -166,26 +188,28 @@ do
       break;
 
       case 1:
-      game(2,craptop_mode);
+      game(screen, 2,craptop_mode);
       //while(keys::keycount());
       //Do the lower score first - this means it is possible for the higher
       //score to push it off the bottom.
       if(score[1]<=score[2])
       {
-        thst.add("Player 1",score[1]);
+        thst.add(screen, "Player 1",score[1]);
         keys::clear_buffer();
-        while(!keys::keypressed());
-        thst.add("Player 2",score[2]);
+        //TODO
+        //while(!keys::keypressed());
+        thst.add(screen, "Player 2",score[2]);
       }
       else
       {
-        thst.add("Player 2",score[2]);
+        thst.add(screen, "Player 2",score[2]);
         keys::clear_buffer();
-        while(!keys::keypressed());
-        thst.add("Player 1",score[1]);
+        //TODO
+        //while(!keys::keypressed());
+        thst.add(screen, "Player 1",score[1]);
       }
     
-      timer::set_counter(0);
+      //timer::set_counter(0);
       
       cont=1;
       break;
@@ -208,7 +232,7 @@ do
       case 5:
       //This might one day be an options screen.  Currently there is only 1 option, so it
       //looks a bit odd.
-      craptop_mode=get_craptop_mode();
+      craptop_mode=get_craptop_mode(screen);
       cont=2;
       break;
 
@@ -245,15 +269,15 @@ return 0;
 
 
 //The game!
-void game(int nplayers,int cm)
+void game(graphics::screen_ &screen, int nplayers, int cm)
 {
 
 //Disable caps/num/scroll lock toggling.
 class clearleds
 {
 public:
-clearleds(){keys::set_key_led_flag(0);}
-~clearleds(){keys::set_key_led_flag(1);}
+clearleds(){/*keys::set_key_led_flag(0);*/}
+~clearleds(){/*keys::set_key_led_flag(1);*/}
 }cl;
 
 //Data for levels
@@ -299,13 +323,12 @@ int stage=0;
 
 int screen_w, screen_h;
   {
-  graphics::screen_ scr;
-  clear(scr);
+  clear(screen);
   //Smart bomb changes colour 0, but 16 is always black
-  scr.rectfill(0, 420, scr.width()-1, scr.height()-1, 16);
-  //Don't assume 640x480.
-  screen_w = scr.width();
-  screen_h = scr.height();
+  screen.rectfill(0, 420, screen.width()-1, screen.height()-1, 16);
+  //Don't assume 640x480. (Did we just do that above?)
+  screen_w = screen.width();
+  screen_h = screen.height();
 
   score[0]=score[1]=score[2]=0;
 
@@ -319,23 +342,23 @@ int screen_w, screen_h;
   switch(nplayers)
     {
     case 1:
-      (void)(new display(width1, cm, cm, 0,
+      (void)(new display(width1, screen_h, cm, cm, 0,
                      new radar(screen_w/2-150,screen_h-50,300,30)));
     break;
 
     case 2: // A bit cramped!;
-      (void)(new display(width2,cm,          cm,1,new radar( 10,430,300,30)));
-      (void)(new display(width2,cm,screen_w/2+1,2,new radar(330,430,300,30)));
-      scr.vline(screen_w/2-1, 0, 425, 15);
-      scr.vline(screen_w/2  , 0, 425, 15);
+      (void)(new display(width2, screen_h, cm,          cm,1,new radar( 10,430,300,30)));
+      (void)(new display(width2, screen_h, cm,screen_w/2+1,2,new radar(330,430,300,30)));
+      screen.vline(screen_w/2-1, 0, 425, 15);
+      screen.vline(screen_w/2  , 0, 425, 15);
     }
     if(cm)
     {
-      scr.vline(0, 0, 425, 15);
-      scr.vline(screen_w-1, 0, 425, 15);
-      scr.hline(0, 0, screen_w-1, 15);
+      screen.vline(0, 0, 425, 15);
+      screen.vline(screen_w-1, 0, 425, 15);
+      screen.hline(0, 0, screen_w-1, 15);
     }
-    scr.drawtext( "IN:    OUT:", screen_w/2-52, screen_h-10, 4);
+    screen.drawtext( "IN:    OUT:", screen_w/2-52, screen_h-10, 15);
   }
 (void)new portal();
 
@@ -354,8 +377,16 @@ defender::violent=0;
     //handle dead sprites.
     {
       std::list<sprite *> morgue;
-      copy_if(sprite::sprites[sprite::level_bg].begin(), sprite::sprites[sprite::level_bg].end(), back_inserter(morgue), std::mem_fun(&sprite::isdead));
-      copy_if(sprite::sprites[sprite::level_fg].begin(), sprite::sprites[sprite::level_fg].end(), back_inserter(morgue), std::mem_fun(&sprite::isdead));
+      //copy_if(sprite::sprites[sprite::level_bg].begin(), sprite::sprites[sprite::level_bg].end(), back_inserter(morgue), std::mem_fun(&sprite::isdead));
+      //copy_if(sprite::sprites[sprite::level_fg].begin(), sprite::sprites[sprite::level_fg].end(), back_inserter(morgue), std::mem_fun(&sprite::isdead));
+      
+      for (auto i=sprite::sprites[sprite::level_bg].begin(); i!=sprite::sprites[sprite::level_bg].end(); ++i){
+        if ((*i)->isdead()) morgue.push_back(*i);
+      }
+      for (auto i=sprite::sprites[sprite::level_fg].begin(); i!=sprite::sprites[sprite::level_fg].end(); ++i){
+        if ((*i)->isdead()) morgue.push_back(*i);
+      }
+
       for(std::list<sprite *> ::iterator i=morgue.begin(); i!=morgue.end(); i++)
       {
         (*i)->drawoff();
@@ -363,21 +394,19 @@ defender::violent=0;
       }
     }
 
-    {
-      graphics::screen_ the_screen;
-  
-      display::drawsprites(the_screen);
-      radar::drawall(the_screen);
+    {  
+      display::drawsprites(screen);
+      radar::drawall(screen);
 
       //Update the "IN" and "OUT" display
       {
         char str[2];
         sprintf(str, "%d", pod::in());        
-        the_screen.drawtext( str, the_screen.width()/2-20,
-                                       the_screen.height()-10,4,16);
+        screen.drawtext( str, screen.width()/2-20,
+                                       screen.height()-10,4,16);
         sprintf(str, "%d", pod::out());
-        the_screen.drawtext( str, the_screen.width()/2+44,
-                                     the_screen.height()-10,4,16);
+        screen.drawtext( str, screen.width()/2+44,
+                                     screen.height()-10,4,16);
       }
     }
 
@@ -434,6 +463,7 @@ defender::violent=0;
     }
 
   //Have we  been paused?
+  /*
   if(controls::get(0).get_pause())
     {
     //screenshot();
@@ -441,16 +471,22 @@ defender::violent=0;
     while(controls::get(0).get_pause()) joystick::poll();
     keys::clear_buffer();
     keys::readkey();
-    }
+    }*/
+
   timerstuff::tick();
-  while(timer::get_counter()==0);timer::set_counter(0);
+  //while(timer::get_counter()==0);timer::set_counter(0);
+
+  //TODO: this last bit is an awful, awful, hack
+  screen.kick();
+  cheat::wait(10);
+  controls::get(0).listen();
 }
 
 //get rid of all the sprites
 sprite::kill_all();
 
 //Give player some time to read the "You're dead" message
-timer::wait(1000);
+cheat::wait(1000);
 
 //force all pending special effects (smart bombs) to finish.
 while(!timerstuff::ok_to_continue())timerstuff::tick();
@@ -459,10 +495,10 @@ while(!timerstuff::ok_to_continue())timerstuff::tick();
 
 //Attract mode - explain the plot(such as it is), show hi scores,
 //do some flashy display hacks
-void attract()
+void attract(graphics::screen_ &scr)
 {
 int dx,dy,dn;
-char *waffle1=
+const char *waffle1=
 "   After much delay, the Evil Empire completed construction of "
 "a gigantic battle station - Planet Exploder 5.0!  "
 "The Planet Exploder was used to destroy the planet "
@@ -471,16 +507,16 @@ char *waffle1=
 "remnants of the Rebellion were forced to retreat to a "
 "secret base in the Gnu system, using all remaining "
 "ships in the evacuation.";
-char *waffle2=
+const char *waffle2=
 "   Your mission is simple.  Destroy all Imperial forces at "
 "each planet and rescue as many lifepods as you can.  Pick up the pods in "
 "your ship and carry them through the portal.";
-char *waffle3=
+const char *waffle3=
 "   Bugs will also pick up lifepods and carry them off, but their mission is "
 "not entirely humanitarian.  If a bug gets to the top of the screen with a "
 "lifepod, it will eat the pod and turn into a lawyer.  If all the pods get "
 "eaten, something very unpleasant will happen.";
-char *puinfo=
+const char *puinfo=
 "  The railgun, autofire and long range last for a limited number of "
 "shots.  The shield lasts for a limited amount of time, but at least you can "
 "turn it on and off.  In one player mode, the I powerup makes you invisible "
@@ -488,23 +524,23 @@ char *puinfo=
 "player mode, it still has this effect -because it makes all the baddies "
 "target the other player.  Including some baddies which by default have no "
 "target!  The elephant gun should be self-explanatory.";
-char *disclaim=
+const char *disclaim=
 "  All Evil Empires, especially those based on real software companies, "
 "are entirely fictional.  Any resemblance between anything and anything "
 "else is coincidental.  If anything goes wrong, it's not my fault.  So "
 "there.";
-char *creditees[5]={"DJ Delorie and a lot of other people","Shawn "
+const char *creditees[5]={"DJ Delorie and a lot of other people","Shawn "
 "Hargreaves and a lot of other people","The Temple Ov Thee Lemur","Timothy Logvinenko",
 "Hugh Robinson"};
-char *fors[5]={"For djgpp","For Allegro","For the plot.  (Hope they don't "
+const char *fors[5]={"For djgpp","For Allegro","For the plot.  (Hope they don't "
 "mind me using it!)","For saying \"You can't get good scrolling on a PC\"",
 "For explaining the principles of stellar parallax"};
-char *pitch=
+const char *pitch=
 "More levels than SWIV!!  More AI than Tetris!!  More equations than A Brief "
 "History Of Time!!  More exclamation marks than are really necessary!!  It's "
 "PROTECTOR, the only game where the player is expected to get rid of all the "
 "bugs.";
-char *pitch2="There's nothing like a drug-induced sales pitch for getting "
+const char *pitch2="There's nothing like a drug-induced sales pitch for getting "
 "up people's noses, complete with exaggerations, lies and gang-bangs.  "
 "That's a technical term for multiple exclamation marks, by the way.  But "
 "some people will be reading this, just in case I've hidden some useful "
@@ -512,18 +548,17 @@ char *pitch2="There's nothing like a drug-induced sales pitch for getting "
 "the background is nasty.  However, unless you are a very fast reader, you "
 "won't be able to read all this in one go, so you'll have to wait for it to "
 "come round again.";
-char *pitch3="If you're not part of the solution, you're part of the "
+const char *pitch3="If you're not part of the solution, you're part of the "
 "precipitate.  Every silver lining has a cloud.  More pot, less speed.  "
 "You might want to try completing the first level without firing a shot or "
 "using the smart bomb.   He who laughs last doesn't get the joke.  Give a "
 "man a fire and he's warm for a day.  Set fire to him and he's warm for the "
 "rest of his life.  Better to light a candle than to eat it.";
-char *gpl = "Protector is free software, released under version 2 of the GPL,"
+const char *gpl = "Protector is free software, released under version 2 of the GPL,"
 " or any later version.  Share and enjoy!";
 
 int screen_w, screen_h;
 {
-  graphics::screen_ scr;
   screen_w = scr.width();
   screen_h = scr.height();
 }
@@ -545,7 +580,7 @@ graphics::bitmap sparescreen(screen_w,screen_h);
       }_2;
       (void)_2; //Avoids "unused variable" warning!
 
- {     graphics::screen_ scr;
+ {     
 
       //Don't assume screen is 640x480 - mot of these work OK on larger screens
       switch(stage)
@@ -565,7 +600,7 @@ graphics::bitmap sparescreen(screen_w,screen_h);
       break;
 
       case 1: //Show hi scores
-        thst.show();
+        thst.show(scr);
       break;
 
       case 2:
@@ -576,7 +611,7 @@ graphics::bitmap sparescreen(screen_w,screen_h);
         sparescreen.circlefill(sw2,sh2,120,0);
         sparescreen.drawtext("Player 1 Controls:",sw2-74,sh2-60,15);
         blit(sparescreen,scr,0,0,0,0,screen_w,screen_h);
-        controls::get(0).info(sw2-75,sh2-30);
+        //controls::get(0).info(scr, sw2-75,sh2-30);
       break;
 
       case 3:
@@ -586,7 +621,7 @@ graphics::bitmap sparescreen(screen_w,screen_h);
         sparescreen.circlefill(sw2,sh2,120,0);
         sparescreen.drawtext("Player 2 Controls:",sw2-74,sh2-60,15);
         blit(sparescreen,scr,0,0,0,0,screen_w,screen_h);
-        controls::get(1).info(sw2-75,sh2-30);
+        //controls::get(1).info(scr, sw2-75,sh2-30);
       break;
 
       case 4:
@@ -730,7 +765,7 @@ sufficiently irritating.",64,30,128);
 
       case 13:  //Hilbert curve
         dx=0;dy=0;dn=128;
-        drawit(&dx,&dy,&dn,1,0,10);
+        drawit(scr, &dx,&dy,&dn,1,0,10);
         scr.drawtext("Irritation level 3: Severe ikkyness",sw2-160,20,15);
       break;
 
@@ -768,17 +803,16 @@ sufficiently irritating.",64,30,128);
 
     for(int n=0;n<1500;n++)
       {
-      if(keys::keypressed()) return;
+      // if(keys::keypressed()) return;
 
-      while(timer::get_counter()==0);timer::set_counter(0);
+      cheat::wait(10);
 
       //Animate sprites
       {
-        graphics::screen_ the_screen;
         std::set<sprite *>::iterator b = sprite::sprites[sprite::level_fg].begin();
         std::set<sprite *>::iterator e = sprite::sprites[sprite::level_fg].end();
         for(std::set<sprite *>::iterator i=b; i!=e; i++)
-          (*i)->demoinc(the_screen);
+          (*i)->demoinc(scr);
       }
 	
       //cycle colours.  If we can't do this with hardware, Allegro makes a valiant attempt
@@ -793,7 +827,7 @@ sufficiently irritating.",64,30,128);
 
 //Draw a block of text.  Try to justify it, but
 //Don't                do                 this.
-void blocktext(graphics::bitmap &bmp,char *strin,int x,int y,int l)
+void blocktext(graphics::bitmap &bmp,const char *strin,int x,int y,int l)
 {
 int a,b,c,sl,p;
 sl=strlen(strin);
@@ -822,15 +856,6 @@ delete[]tempstrin;
 
 
 
-int get_craptop_mode()
-{
-//todo: perhaps craptop_mode should modify the pallete to cope with
-//LCD abominations
-graphics::screen_ scr;
-clear(scr);
-const char *options[2]={"On","Off"};
-return !keymenu(150,80,0,options,2);
-}
 
 graphics::bitmap planexppic(int size)
 {
@@ -1014,7 +1039,7 @@ void jools(graphics::bitmap &bmp)
   }
 }
 
-void drawit(int *x,int *y,int *n,int dx,int dy,int level)
+void drawit(graphics::screen_ &scr, int *x,int *y,int *n,int dx,int dy,int level)
 {
 //Recursively draw Hilbert's space-filling curve
 //
@@ -1043,12 +1068,12 @@ if(level--)
       case 2: *x+=dx;*y+=dy;break;
       case 3: *x-=dy;*y-=dx;break;
       }
-    if(a){if(++*n==256)*n=128;graphics::screen_().putpixel(*x,*y,*n);}
+    if(a){if(++*n==256)*n=128;scr.putpixel(*x,*y,*n);}
     switch(a)
       {
-      case 0:  drawit(x,y,n, dy, dx,level);break;
-      case 3:  drawit(x,y,n,-dy,-dx,level);break;
-      default: drawit(x,y,n, dx, dy,level);break;
+      case 0:  drawit(scr, x,y,n, dy, dx,level);break;
+      case 3:  drawit(scr, x,y,n,-dy,-dx,level);break;
+      default: drawit(scr, x,y,n, dx, dy,level);break;
       }
     }
 }

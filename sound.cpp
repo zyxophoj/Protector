@@ -1,11 +1,9 @@
 #include<math.h>
 #include "sound.h"
-#include "protdata.h"
-#include <allegro.h>
 
 bool sound::is_ok = false;
-DATAFILE *df;
 
+/*
 class sample
 {
 friend class sound;
@@ -48,8 +46,12 @@ sample kaboom_;
 sample bpop_;
 sample clang_;
 
+
+*/
 int sound::init()
 {
+
+/*
 int a;
 double da,db;
 
@@ -150,27 +152,20 @@ pshoot_.set_priority(192);
 alert_.set_priority(255);
 die_.set_priority(255);
 
+
+*/
+
 return 0;
 }
 
 void sound::cleanup()
 {
-  if(is_ok)
-  {
-    /*destroy_sample(shoot);
-    destroy_sample(pickup);
-    destroy_sample(putdown);
-    destroy_sample(alert);
-    destroy_sample(tadaa);
-    destroy_sample(collect);*/
 
-    unload_datafile(df);
-    is_ok=0;
-  }
 }
 
 void sound::play(const foo &spl,int vol)
 {
+  /*
   sample *ps=0;
   switch(spl)
   {
@@ -189,5 +184,6 @@ void sound::play(const foo &spl,int vol)
     case clang:   ps = &clang_;   break;
   } 
   if(is_ok)play_sample(ps->m_pSAMPLE,vol,128,1000,0);
+  */
 }
 

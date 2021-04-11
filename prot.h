@@ -62,6 +62,10 @@ inline int randint(int n){return n?(rand()%n):0;}
 #define DEFHEIGHT 10
 #define DEFWIDTH 20
 
+namespace graphics{
+class screen_;
+}
+
 class sprite;
 class sprite1;
 class defender;
@@ -111,7 +115,7 @@ friend class radar;
 friend class defender;
 
 public:
-  display(int,int,int,int,radar *);
+  display(int,int,int,int,int,radar *);
   ~display();
   int gethw(void);
   int getcx(void);
@@ -121,8 +125,8 @@ public:
   void remove_sprite1(sprite1 *);
   void drawall(graphics::screen_ &);
   static void drawsprites(graphics::screen_ &);
-  static void allmessage(char *);
-  void message(char *);
+  static void allmessage(const char *);
+  void message(const char *);
   static void killall(void);
 
 private:
@@ -324,7 +328,7 @@ public:
   letter(int,int,int,display *);
   ~letter();
   static void init(void);
-  static void message(char *,display *);
+  static void message(const char *,display *);
   static void kill1(void);
   int isdead(void);
   
@@ -682,9 +686,9 @@ class hst
   int scores[10];
 
 public:
-  hst(char *);
-  void add(char *, int);
-  void show();
+  hst(const char *);
+  void add(graphics::screen_ &scr, const char *, int);
+  void show(graphics::screen_ &scr);
   ~hst();
 };
 

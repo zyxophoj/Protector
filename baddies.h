@@ -174,7 +174,7 @@ public:
 private:
   static graphics::bitmap vippic;
   static graphics::bitmap edgeL, edgeR;
-  static char *blurb[];
+  static const char *blurb[];
   static int nblurbs;
   static int messx1;
   static int messx2;
