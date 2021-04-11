@@ -203,12 +203,12 @@ while(true)
   switch(wait_for_key(std::list<SDL_Keycode>(keys, keys+sizeof(keys)/sizeof(*keys)))){
     case SDLK_UP:    
       scr.drawtext(textlist[h],x,y+8*h,15,-1);
-      h--;
+      if (h>0)h--;
       break;
 
     case SDLK_DOWN:
       scr.drawtext(textlist[h],x,y+8*h,15,-1);
-      h++;
+      if (h<length-1)h++;
       break;
 
     case SDLK_RETURN: case SDLK_ESCAPE:
