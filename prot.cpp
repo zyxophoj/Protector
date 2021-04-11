@@ -165,19 +165,32 @@ void display::drawall(graphics::screen_ &scr)
 
 
 
-//blit chunks of vscreen to real screen
-for(std::list<drect *>::iterator i=drects.begin(); i!=drects.end(); i++)
+
+
+
+if (timerstuff::bombstate){
+  // Nasty cheat:  Because the pallette changing is fake, all the background is changing colour
+  // so we have to blit everything.
+  blit(vscreen, scr, 0,0, xoff, yoff, vscreen.width(), vscreen.height());
+  vscreen.clear(0);
+}else{
+  //Normal, fast method:  blit only changed chunks of vscreen to real screen
+  for(std::list<drect *>::iterator i=drects.begin(); i!=drects.end(); i++)
   {
-  (*i)->draw(vscreen,scr,xoff,yoff);
+    (*i)->draw(vscreen,scr,xoff,yoff);
   }
 
-//black out chunks of vscreen
-while(drects.size())
+  // black out changed chunks of vscreen
+  // TODO: confirm this is actually faster than clear(0)
+  while(drects.size())
   {
-  (*drects.begin())->cleardraw(vscreen);
-  delete *(drects.begin());
-  drects.erase(drects.begin());
+    (*drects.begin())->cleardraw(vscreen);
+    delete *(drects.begin());
+    drects.erase(drects.begin());
   }
+
+}
+
 
 //draw ground
 for(std::list<display *>::iterator i=displays.begin(); i!=displays.end(); i++)
@@ -1649,9 +1662,7 @@ void timerstuff::tick()
 if(bombstate)
   {
   bombstate--;
-  
-  //TODO: find a way top make this work without breaking drects
-  //graphics::setcol(0,bombstate,bombstate,bombstate);
+  graphics::setcol(0,bombstate,bombstate,bombstate);
   }
 if(messtimer)
   {

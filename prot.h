@@ -666,10 +666,12 @@ private:
 //Things the game sometimes needs to wait for - messages, smart bombs, etc
 class timerstuff
 {
-  static int bombstate;
+
   static int messtimer;
 
 public:
+  static int bombstate;
+
   static void add_bomb();
   static void tick();
   static void new_message();
